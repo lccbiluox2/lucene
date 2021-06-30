@@ -114,3 +114,4 @@ contributing.
 - [Developers Mailing List](https://lucene.apache.org/core/discussion.html#developer-lists)
 - [Issue Tracker](https://issues.apache.org/jira/browse/LUCENE)
 - IRC: `#lucene` and `#lucene-dev` on freenode.net
+
