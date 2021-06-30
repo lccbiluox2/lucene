@@ -28,16 +28,52 @@ import org.apache.lucene.index.VectorValues;
 /** Describes the properties of a field. */
 public class FieldType implements IndexableFieldType {
 
+  /**
+   * 代表是否需要保存该字段，如果为false，则lucene不会保存这个字段的值，而搜索结果中返回的文档只会包含保存了的字段。
+   */
   private boolean stored;
+  /**
+   *  代表是否做分词，在lucene中只有TextField这一个字段需要做分词。
+   */
   private boolean tokenized = true;
+  /**
+   * http://makble.com/what-is-term-vector-in-lucene
+   *
+   * termVector: 这篇文章很好的解释了term vector的概念，简单来说，term vector保存了
+   * 一个文档内所有的term的相关信息，包括Term值、出现次数（frequencies）以及位置（positions）等，
+   * 是一个per-document inverted index，提供了根据docid来查找该文档内所有term信息的能力。
+   * 对于长度较小的字段不建议开启term verctor，因为只需要重新做一遍分词即可拿到term信息，
+   * 而针对长度较长或者分词代价较大的字段，则建议开启term vector。Term vector的用途主要有两个，
+   * 一是关键词高亮，二是做文档间的相似度匹配（more-like-this）。
+   */
   private boolean storeTermVectors;
   private boolean storeTermVectorOffsets;
   private boolean storeTermVectorPositions;
   private boolean storeTermVectorPayloads;
+  /**
+   * Norms是normalization的缩写，lucene允许每个文档的每个字段都存储一个normalization factor，
+   * 是和搜索时的相关性计算有关的一个系数。Norms的存储只占一个字节，但是每个文档的每个字段都会独立存储一份，
+   * 且Norms数据会全部加载到内存。所以若开启了Norms，会消耗额外的存储空间和内存。但若关闭了Norms，
+   * 则无法做index-time boosting（elasticsearch官方建议使用query-time boosting来替代）以及length
+   * normalization。
+   */
   private boolean omitNorms;
+  /**
+   * Lucene提供倒排索引的5种可选参数（NONE、DOCS、DOCS_AND_FREQS、DOCS_AND_FREQS_AND_POSITIONS、
+   * DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS），用于选择该字段是否需要被索引，以及索引哪些内容。
+   */
   private IndexOptions indexOptions = IndexOptions.NONE;
   private boolean frozen;
+  /**
+   * DocValue是Lucene 4.0引入的一个正向索引（docid到field的一个列存），大大优化了sorting、
+   * faceting或aggregation的效率。DocValues是一个强schema的存储结构，开启DocValues的字段必须
+   * 拥有严格一致的类型，目前Lucene只提供NUMERIC、BINARY、SORTED、SORTED_NUMERIC和SORTED_SET五种类型。
+   */
   private DocValuesType docValuesType = DocValuesType.NONE;
+  /**
+   * ucene支持多维数据的索引，采取特殊的索引来优化对多维数据的查询，这类数据最典型的应用场景是地理位置索引
+   * ，一般经纬度数据会采取这个索引方式。
+   */
   private int dimensionCount;
   private int indexDimensionCount;
   private int dimensionNumBytes;
